@@ -14,12 +14,11 @@
 
 import pytest
 import redis
-from testing_support.db_settings import redis_settings
+from testing_support.db_settings import redis_cluster_settings
 
-DB_SETTINGS = redis_settings()[0]
+DB_CLUSTER_SETTINGS = redis_cluster_settings()[0]
 
-redis_client = redis.Redis(host=DB_SETTINGS["host"], port=DB_SETTINGS["port"], db=0)
-strict_redis_client = redis.StrictRedis(host=DB_SETTINGS["host"], port=DB_SETTINGS["port"], db=0)
+cluster_client = redis.RedisCluster(host=DB_CLUSTER_SETTINGS["host"], port=DB_CLUSTER_SETTINGS["port"])
 
 
 IGNORED_METHODS = {
@@ -85,6 +84,57 @@ IGNORED_METHODS = {
     "set_retry",
     "transaction",
     "version",
+    "ALL_NODES",
+    "CLUSTER_COMMANDS_RESPONSE_CALLBACKS",
+    "COMMAND_FLAGS",
+    "DEFAULT_NODE",
+    "ERRORS_ALLOW_RETRY",
+    "NODE_FLAGS",
+    "PRIMARIES",
+    "RANDOM",
+    "REPLICAS",
+    "RESULT_CALLBACKS",
+    "RedisClusterRequestTTL",
+    "SEARCH_COMMANDS",
+    "cluster_addslotsrange",
+    "cluster_bumpepoch",
+    "cluster_delslotsrange",
+    "cluster_error_retry_attempts",
+    "cluster_flushslots",
+    "cluster_links",
+    "cluster_myid",
+    "cluster_replicas",
+    "cluster_response_callbacks",
+    "cluster_setslot_stable",
+    "cluster_shards",
+    "command_flags",
+    "commands_parser",
+    "determine_slot",
+    "disconnect_connection_pools",
+    "encoder",
+    "get_default_node",
+    "get_node",
+    "get_node_from_key",
+    "get_nodes",
+    "get_primaries",
+    "get_random_node",
+    "get_redis_connection",
+    "get_replicas",
+    "keyslot",
+    "mget_nonatomic",
+    "monitor",
+    "mset_nonatomic",
+    "node_flags",
+    "nodes_manager",
+    "on_connect",
+    "pubsub",
+    "read_from_replicas",
+    "reinitialize_counter",
+    "reinitialize_steps",
+    "replace_default_node",
+    "result_callbacks",
+    "set_default_node",
+    "user_on_connect_func",
 }
 
 REDIS_MODULES = {
@@ -102,7 +152,10 @@ REDIS_MODULES = {
 IGNORED_METHODS |= REDIS_MODULES
 
 
-@pytest.mark.parametrize("client", (redis_client, strict_redis_client))
+breakpoint()
+
+
+@pytest.mark.parametrize("client", (cluster_client))
 def test_uninstrumented_methods(client):
     methods = {m for m in dir(client) if not m[0] == "_"}
     is_wrapped = lambda m: hasattr(getattr(client, m), "__wrapped__")

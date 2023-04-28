@@ -46,6 +46,7 @@ jobs:
       - postgres
       - rabbitmq
       - redis
+      - rediscluster
       - solr
 
     steps:
@@ -317,6 +318,75 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-python-matrix
+
+      - name: Get Environments
+        id: get-envs
+        run: |
+          echo "::set-output name=envs::$(tox -l | grep "^${{ github.job }}\-" | ./.github/workflows/get-envs.py)"
+        env:
+          GROUP_NUMBER: ${{ matrix.group-number }}
+
+      - name: Test
+        run: |
+          tox -vv -e ${{ steps.get-envs.outputs.envs }} -p auto
+        env:
+          TOX_PARALLEL_NO_SPINNER: 1
+          PY_COLORS: 0
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-${{ github.job }}-${{ strategy.job-index }}
+          path: ./**/.coverage.*
+          retention-days: 1
+
+  rediscluster:
+    env:
+      TOTAL_GROUPS: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        group-number: [1]
+
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 8090:7000
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup-python-matrix
+
+      # Start the redis cluser (See https://redis.io/docs/management/scaling/#create-a-redis-cluster)
+      - name: Start the redis cluster
+        run: |
+          mkdir cluster-test
+          mkdir cluster-test/7000 cluster-test/7001 cluster-test/7002 cluster-test/7003 cluster-test/7004 cluster-test/7005
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7000/redis.conf
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7001/redis.conf
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7002/redis.conf
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7003/redis.conf
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7004/redis.conf
+          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7005/redis.conf
+          redis-server ./cluster-test/7000/redis.conf --daemonize yes
+          redis-server ./cluster-test/7001/redis.conf --daemonize yes
+          redis-server ./cluster-test/7002/redis.conf --daemonize yes
+          redis-server ./cluster-test/7003/redis.conf --daemonize yes
+          redis-server ./cluster-test/7004/redis.conf --daemonize yes
+          redis-server ./cluster-test/7005/redis.conf --daemonize yes
+          redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 --cluster-replicas 1
+          sudo apt-get install libcurl4-openssl-dev
 
       - name: Get Environments
         id: get-envs
