@@ -374,11 +374,11 @@ jobs:
           mkdir cluster-test
           mkdir cluster-test/7000 cluster-test/7001 cluster-test/7002 cluster-test/7003 cluster-test/7004 cluster-test/7005
           echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7000/redis.conf
-          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7001/redis.conf
-          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7002/redis.conf
-          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7003/redis.conf
-          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7004/redis.conf
-          echo $'port 7000\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7005/redis.conf
+          echo $'port 7001\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7001/redis.conf
+          echo $'port 7002\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7002/redis.conf
+          echo $'port 7003\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7003/redis.conf
+          echo $'port 7004\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7004/redis.conf
+          echo $'port 7005\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7005/redis.conf
           redis-server ./cluster-test/7000/redis.conf --daemonize yes
           redis-server ./cluster-test/7001/redis.conf --daemonize yes
           redis-server ./cluster-test/7002/redis.conf --daemonize yes
@@ -386,7 +386,6 @@ jobs:
           redis-server ./cluster-test/7004/redis.conf --daemonize yes
           redis-server ./cluster-test/7005/redis.conf --daemonize yes
           redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 --cluster-replicas 1
-          sudo apt-get install libcurl4-openssl-dev
 
       - name: Get Environments
         id: get-envs
