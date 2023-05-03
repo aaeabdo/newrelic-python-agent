@@ -379,6 +379,7 @@ jobs:
           echo $'port 7003\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7003/redis.conf
           echo $'port 7004\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7004/redis.conf
           echo $'port 7005\ncluster-enabled yes\ncluster-config-file nodes.conf\ncluster-node-timeout 5000\nappendonly yes' > cluster-test/7005/redis.conf
+          sudo apt install redis-server
           redis-server ./cluster-test/7000/redis.conf --daemonize yes
           redis-server ./cluster-test/7001/redis.conf --daemonize yes
           redis-server ./cluster-test/7002/redis.conf --daemonize yes
