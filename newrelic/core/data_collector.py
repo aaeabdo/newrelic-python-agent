@@ -25,6 +25,7 @@ from newrelic.common.agent_http import (
     DeveloperModeClient,
     ServerlessModeClient,
 )
+from newrelic.common.otlp_utils import create_key_values_from_iterable
 from newrelic.core.agent_protocol import (
     AgentProtocol,
     OtlpProtocol,
@@ -32,6 +33,11 @@ from newrelic.core.agent_protocol import (
 )
 from newrelic.core.agent_streaming import StreamingRpc
 from newrelic.core.config import global_settings
+from newrelic.packages.opentelemetry_proto.logs_pb2 import (
+    LogsData,
+    ResourceLogs,
+    ScopeLogs,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -122,10 +128,21 @@ class Session(object):
 
     def send_ml_events(self, sampling_info, custom_event_data):
         """Called to submit sample set for machine learning events."""
-
-        # TODO Make this send to MELT/OTLP endpoint instead of agent listener
-        payload = (self.agent_run_id, sampling_info, custom_event_data)  # TODO this payload will be different
-        return self._protocol.send("custom_event_data", payload)
+        # payload = (self.agent_run_id, sampling_info, custom_event_data)
+        ml_events = []
+        for event in custom_event_data:
+            event_info, event_attrs = event
+            event_attrs.update({"event.domain": "newrelic.ml_events", "event.name": event_info["type"]})
+            ml_attrs = create_key_values_from_iterable(event_attrs)
+            ml_events.append(
+                {
+                    "time_unix_nano": event_info["timestamp"],
+                    "observed_time_unix_nano": event_info["timestamp"],
+                    "attributes": ml_attrs,
+                }
+            )
+        payload = LogsData(resource_logs=[ResourceLogs(scope_logs=[ScopeLogs(log_records=ml_events)])])
+        return self._otlp_protocol.send("custom_event_data", payload)
 
     def send_span_events(self, sampling_info, span_event_data):
         """Called to submit sample set for span events."""
